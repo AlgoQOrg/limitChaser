@@ -1,6 +1,7 @@
 import sys
 from asyncio import run, gather
-import ccxt.async_support as ccxt
+import ccxt
+import ccxt.pro
 from Base import Base
 
 apiKey = 'xxx'
@@ -123,7 +124,7 @@ class LimitChaser(Base):
             self.allOrdersClosed()
 
 async def main():
-    connection = ccxt.ftx({
+    connection = ccxt.pro.ftx({
         'apiKey': apiKey,
         'secret': secret,
         'headers': {'FTX-SUBACCOUNT': subaccount} # remove this line if you don't use a subaccount
