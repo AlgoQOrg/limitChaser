@@ -2,7 +2,10 @@ import sys
 from asyncio import run, gather
 import ccxtpro
 from Base import Base
-from config import apiKey, secret, subaccount
+
+apiKey = 'xxx'
+secret = 'xxx'
+subaccount = 'xxx'
 
 class LimitChaser(Base):
     def __init__(self, connection, pairs):
@@ -123,7 +126,7 @@ async def main():
     connection = ccxtpro.ftx({
         'apiKey': apiKey,
         'secret': secret,
-        'headers': {'FTX-SUBACCOUNT': subaccount}
+        'headers': {'FTX-SUBACCOUNT': subaccount} # remove this line if you don't use a subaccount
     })
     pairs = {
         'ETH/USD': {'side': 'sell', 'amount': 0.006, 'threshold': 1, 'mode': 'best', 'simMarket': None, 'simMarketSide': None},
