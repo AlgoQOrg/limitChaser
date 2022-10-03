@@ -53,7 +53,7 @@ class LimitChaser(Base):
         pair = order['symbol']
         self.pairs[pair]['order'] = order
         self.pairs[pair]['lastTradeTimestamp'] = order['lastTradeTimestamp']
-        print(f'{pair} - {order["side"].capitalize()} limit order placed at {order["price"]} for {order["amount"]} {self.markets[pair]["base"].lower()}')
+        print(f'{pair} - {order["side"].capitalize()} limit order placed at {order["price"]} for {order["amount"]} {self.markets[pair]["base"].lower().upper()}')
     
     def calcRemainingAmount(self, pair):
         totalLimitFilled = 0
@@ -80,7 +80,7 @@ class LimitChaser(Base):
         symbol = self.pairs[pair]['simMarket']
         remainingAmount = self.calcRemainingAmount(pair)
         simOrder = await self.marketOrder(symbol, side, remainingAmount)
-        print(f'{symbol} - Simultaneous {side} market order is been filled at {simOrder["average"]} for {simOrder["amount"]} {self.markets[pair]["base"].lower()}')
+        print(f'{symbol} - Simultaneous {side} market order is been filled for {simOrder["amount"]} {self.markets[pair]["base"].lower().upper()}')
         
         self.pairs[pair]['orders'][simOrder['id']] = simOrder  # type: ignore
         self.pairs[pair]['simMarketFilled'] += remainingAmount
@@ -120,7 +120,7 @@ class LimitChaser(Base):
                 await self.placeSimMarketOrder(pair)
             
             self.pairs[pair]['closed'] = True
-            print(f'{pair} - {order["side"].capitalize()} limit order has been closed at {order["average"]} for {order["filled"]} {self.markets[pair]["base"].lower()}')
+            print(f'{pair} - {order["side"].capitalize()} limit order has been closed at {order["average"]} for {order["filled"]} {self.markets[pair]["base"].lower().upper()}')
             self.allOrdersClosed()
 
 async def main():
