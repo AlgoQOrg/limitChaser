@@ -71,6 +71,7 @@ class LimitChaser(Base):
                 break
         
         if ordersClosed:
+            self.connection.close()
             print('All orders has been filled!')
             sys.exit()
 
