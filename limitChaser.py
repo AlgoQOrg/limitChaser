@@ -26,6 +26,7 @@ class LimitChaser(Base):
     async def init(self): 
         # Seperate async init func, bcs in `__init__` it isn't possible to run asynchronous code
         self.markets = await self.connection.loadMarkets()
+        self.tickers = await self.connection.fetchTickers()
         for pair in self.pairs.keys():
             self.pairs[pair]['pip'] = self.markets[pair]['precision']['price']
 
@@ -52,7 +53,7 @@ class LimitChaser(Base):
     def logOrder(self, order):
         pair = order['symbol']
         self.pairs[pair]['order'] = order
-        self.pairs[pair]['lastTradeTimestamp'] = order['lastTradeTimestamp']
+        self.pairs[pair]['orders'][order['id']] = order
         print(f'{pair} - {order["side"].capitalize()} limit order placed at {order["price"]} for {order["amount"]} {self.markets[pair]["base"]}')
     
     def calcRemainingAmount(self, pair):
@@ -90,6 +91,9 @@ class LimitChaser(Base):
         mode = self.pairs[pair]['mode']
         if self.pairs[pair]['order'] == None:
             side = self.pairs[pair]['side']
+            if isinstance(self.pairs[pair]['amount'], str) and 'usd' in self.pairs[pair]['amount'].lower():
+                amount = float(self.pairs[pair]['amount'].lower().replace('usd', ''))
+                self.pairs[pair]['amount'] = amount / self.tickers[pair]['close']
             amount = self.connection.amountToPrecision(pair, self.pairs[pair]['amount'])
             price = self.selectPriceBasedOnMode(pair, orderBook, side, mode)
             order = await self.limitOrder(pair, side, amount, price, params=self.postOnlyParams)
@@ -98,7 +102,7 @@ class LimitChaser(Base):
         if self.pairs[pair]['closed'] == False:
             if self.pairs[pair]['order']['side'] == 'buy' and \
                 orderBook['bids'][0][0] >= self.pairs[pair]['order']['price'] + (self.pairs[pair]['threshold'] * self.pairs[pair]['pip']):
-                self.connection.cancelAllOrders(pair)
+                await self.connection.cancelOrder(self.pairs[pair]['order']['id'], pair)
                 remainingAmount = self.calcRemainingAmount(pair)
                 price = self.selectPriceBasedOnMode(pair, orderBook, 'buy', mode)
                 order = await self.limitOrder(pair, 'buy', remainingAmount, price, params=self.postOnlyParams)
@@ -106,7 +110,7 @@ class LimitChaser(Base):
 
             elif self.pairs[pair]['order']['side'] == 'sell' and \
                 orderBook['asks'][0][0] <= self.pairs[pair]['order']['price'] - (self.pairs[pair]['threshold'] * self.pairs[pair]['pip']):
-                self.connection.cancelAllOrders(pair)
+                await self.connection.cancelOrder(self.pairs[pair]['order']['id'], pair)
                 remainingAmount = self.calcRemainingAmount(pair)
                 price = self.selectPriceBasedOnMode(pair, orderBook, 'sell', mode)
                 order = await self.limitOrder(pair, 'sell', remainingAmount, price, params=self.postOnlyParams)
